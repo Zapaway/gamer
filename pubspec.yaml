@@ -26,6 +26,9 @@ dependencies:
   google_sign_in: ^5.2.2
   cloud_firestore: ^3.1.6
   json_annotation: ^4.4.0  # used for JSON serialization
+
+  # Local File Access and Web Scraping
+  web_scraper: ^0.1.4
   path_provider: ^2.0.8
   http: ^0.13.4
 
