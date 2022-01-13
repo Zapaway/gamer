@@ -8,6 +8,7 @@ import 'package:gamer/models/non_json_annotated/all_game_general_info_data_model
 import 'package:gamer/providers/game_related_providers.dart';
 import 'package:gamer/providers/game_reviews_notifier.dart';
 import 'package:gamer/services/database_service.dart';
+import 'package:gamer/services/scrapers/google_play_scraper.dart';
 import 'package:gamer/shared/consts.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
@@ -28,8 +29,9 @@ class _SearchState extends ConsumerState<Search> {
 
   // keep track of search history
   static const _historyLimit = 10;
-  String _currSearchQuery = "";  // keeps track of what's in the search bar
+  String _currSearchQuery = ""; // keeps track of what's in the search bar
   final _searchHistory = <String>[];
+
   void _addToHistory(String query) {
     if (_searchHistory.length == _historyLimit) {
       _searchHistory.removeLast();
@@ -59,10 +61,7 @@ class _SearchState extends ConsumerState<Search> {
           height: 50,
           borderRadius: BorderRadius.circular(36),
           hint: "Search by game title",
-          hintStyle: const TextStyle(
-            fontSize: 18,
-            color: Colors.white
-          ),
+          hintStyle: const TextStyle(fontSize: 18, color: Colors.white),
           queryStyle: const TextStyle(
             fontSize: 18,
             color: Colors.white,
@@ -74,25 +73,27 @@ class _SearchState extends ConsumerState<Search> {
           leadingActions: [
             FloatingSearchBarAction.back(),
             if (ref.read(_queryStateProvider.notifier).state != null)
-              FloatingSearchBarAction.icon(  // go back to main menu
-                showIfClosed: true,
-                showIfOpened: false,
-                icon: Icons.home,
-                onTap: () {
-                  ref.read(_queryStateProvider.notifier).state = null;
-                  setState(() {});
-                }
-              ),
+              FloatingSearchBarAction.icon(
+                  // go back to main menu
+                  showIfClosed: true,
+                  showIfOpened: false,
+                  icon: Icons.home,
+                  onTap: () {
+                    ref.read(_queryStateProvider.notifier).state = null;
+                    setState(() {});
+                  }),
           ],
           actions: [
-            FloatingSearchBarAction.icon(  // search icon to open search
+            FloatingSearchBarAction.icon(
+              // search icon to open search
               showIfClosed: true,
               showIfOpened: false,
               icon: Icons.search,
               onTap: () => _searchBarCtrl.open(),
             ),
             if (_currSearchQuery.isNotEmpty)
-              FloatingSearchBarAction.icon(  // clear icon to clear query
+              FloatingSearchBarAction.icon(
+                // clear icon to clear query
                 showIfClosed: false,
                 showIfOpened: true,
                 icon: Icons.clear,
@@ -103,10 +104,11 @@ class _SearchState extends ConsumerState<Search> {
           onQueryChanged: (query) => setState(() => _currSearchQuery = query),
           onSubmitted: (_) {
             _currSearchQuery = _currSearchQuery.trim();
-            if (_currSearchQuery.isEmpty) return;  // needs to be valid
+            if (_currSearchQuery.isEmpty) return; // needs to be valid
 
             final index = _searchHistory.indexOf(_currSearchQuery);
-            if (index != -1) { // reorder the history
+            if (index != -1) {
+              // reorder the history
               _searchHistory.removeAt(index);
             }
 
@@ -121,42 +123,38 @@ class _SearchState extends ConsumerState<Search> {
                 body: Padding(
                   padding: const EdgeInsets.fromLTRB(5, 10, 5, 0),
                   child: ListView.builder(
-                    itemCount: _currSearchQuery.isEmpty
-                      ? _searchHistory.length
-                      : 0,
-                    itemBuilder: (context, i) {
-                      return ListTile(
-                        onTap: () {
-                          _currSearchQuery = _searchHistory[i];
-                          _searchHistory.removeAt(i);
+                      itemCount:
+                          _currSearchQuery.isEmpty ? _searchHistory.length : 0,
+                      itemBuilder: (context, i) {
+                        return ListTile(
+                          onTap: () {
+                            _currSearchQuery = _searchHistory[i];
+                            _searchHistory.removeAt(i);
 
-                          _searchBarCtrl.query = _currSearchQuery;
-                          _addToHistory(_currSearchQuery);
-                        },
-                        leading: const Icon(
-                          Icons.history,
-                          color: AppColors.grey,
-                        ),
-                        title: Text(
-                          _searchHistory[i],
-                          style: const TextStyle(
-                            fontSize: 20,
-                            color: AppColors.grey
-                          ),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(
-                            Icons.clear,
+                            _searchBarCtrl.query = _currSearchQuery;
+                            _addToHistory(_currSearchQuery);
+                          },
+                          leading: const Icon(
+                            Icons.history,
                             color: AppColors.grey,
                           ),
-                          onPressed: () {
-                            _searchHistory.removeAt(i);
-                            setState(() {});
-                          },
-                        ),
-                      );
-                    }
-                  ),
+                          title: Text(
+                            _searchHistory[i],
+                            style: const TextStyle(
+                                fontSize: 20, color: AppColors.grey),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(
+                              Icons.clear,
+                              color: AppColors.grey,
+                            ),
+                            onPressed: () {
+                              _searchHistory.removeAt(i);
+                              setState(() {});
+                            },
+                          ),
+                        );
+                      }),
                 ),
               ),
             );
@@ -192,34 +190,32 @@ class _SearchResults extends ConsumerWidget {
   /// Uses basic search technique where it checks if the game title
   /// starts with the query.
   /// In the future, use advanced text-search using services like Algolia.
-  final queryResultsFutureProvider = FutureProvider
-    .autoDispose.family<List<GameModel>, String>((ref, query) async {
-      final queryLower = query.replaceAll(RegExp(r"\s"), "")
-        .toLowerCase();
+  final queryResultsFutureProvider = FutureProvider.autoDispose
+      .family<List<GameModel>, String>((ref, query) async {
+    final queryLower = query.replaceAll(RegExp(r"\s"), "").toLowerCase();
 
-      final queryResult = await DatabaseService.gamesCollection
+    final queryResult = await DatabaseService.gamesCollection
         .where("nameLower", isGreaterThanOrEqualTo: queryLower)
         .where("nameLower", isLessThan: queryLower + "\uf7ff")
         .get();
-      return queryResult.docs.map((e) => GameModel.fromFirestore(e)).toList();
+    return queryResult.docs.map((e) => GameModel.fromFirestore(e)).toList();
   });
   final gameGeneralInfoFutureProvider = FutureProvider.autoDispose
-    .family<AllGameGeneralInfoDataModel, String>((ref, gameID) async {
-      final gameIconFut = ref.watch(gameIconFutureProvider(gameID).future);
-      final gameDataFut = ref.watch(gameDataStreamProvider(gameID).future);
-      final userReviewsFut = ref.watch(
-        userReviewModelsOnGameFutureProvider(gameID).future
-      );
+      .family<AllGameGeneralInfoDataModel, String>((ref, gameID) async {
+    final gameIconFut = ref.watch(gameIconFutureProvider(gameID).future);
+    final gameDataFut = ref.watch(gameDataStreamProvider(gameID).future);
+    final userReviewsFut =
+        ref.watch(userReviewModelsOnGameFutureProvider(gameID).future);
 
-      final gameReviews = GameReviews(allReviews: await userReviewsFut);
-      return AllGameGeneralInfoDataModel(
-        gameIconProvider: await gameIconFut,
-        gameModel: await gameDataFut,
-        amountOfReviews: gameReviews.amountOfReviews,
-        averageGameplayStars: gameReviews.averageGameplayStars,
-        averagePlayabilityStars: gameReviews.averagePlayabilityStars,
-        averageVisualsStars: gameReviews.averageVisualsStars,
-      );
+    final gameReviews = GameReviews(allReviews: await userReviewsFut);
+    return AllGameGeneralInfoDataModel(
+      gameIconProvider: await gameIconFut,
+      gameModel: await gameDataFut,
+      amountOfReviews: gameReviews.amountOfReviews,
+      averageGameplayStars: gameReviews.averageGameplayStars,
+      averagePlayabilityStars: gameReviews.averagePlayabilityStars,
+      averageVisualsStars: gameReviews.averageVisualsStars,
+    );
   });
 
   _SearchResults({
@@ -250,20 +246,18 @@ class _SearchResults extends ConsumerWidget {
       child: child,
     );
   }
+
   /// Wrapper that enables scroll behavior for widgets that only take up
   /// the entire screen (bounded height of the screen's height).
-  Widget wrapWithScrollBehavior({
-    required BuildContext context,
-    required Widget child
-  }) {
+  Widget wrapWithScrollBehavior(
+      {required BuildContext context, required Widget child}) {
     return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: SizedBox(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
-        child: child,
-      )
-    );
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height,
+          child: child,
+        ));
   }
 
   @override
@@ -282,150 +276,154 @@ class _SearchResults extends ConsumerWidget {
           ),
           Text(
             "Search for a game",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 25
-            ),
+            style: TextStyle(color: Colors.white, fontSize: 25),
           ),
           _AddGameButton(),
         ],
       );
-    }
-    else {
-      final listOfGameModelsAsync = ref.watch(
-        queryResultsFutureProvider(query)
-      );
+    } else {
+      final listOfGameModelsAsync =
+          ref.watch(queryResultsFutureProvider(query));
 
-      return listOfGameModelsAsync.when(
-        data: (gameModels) {
-          return wrapWithRefresher(
-            ref: ref,
-            query: query,
-            child: gameModels.isEmpty
+      return listOfGameModelsAsync.when(data: (gameModels) {
+        return wrapWithRefresher(
+          ref: ref,
+          query: query,
+          child: gameModels.isEmpty
               ? wrapWithScrollBehavior(
-                context: context,
-                child: Column(  // do not display a list but a no results widget
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(
-                      Icons.error,
-                      size: 100,
-                      color: Colors.white,
-                    ),
-                    SizedBox(height: 5,),
-                    Text(
-                      "No results. Please try different keywords",
-                      style: TextStyle(
+                  context: context,
+                  child: Column(
+                    // do not display a list but a no results widget
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(
+                        Icons.error,
+                        size: 100,
                         color: Colors.white,
-                        fontSize: 20
                       ),
-                      textAlign: TextAlign.center,
-                    )
-                  ],
-                ),
-              )
-              : ListView.separated(
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: gameModels.length,
-                padding: const EdgeInsets.only(
-                  // used to avoid the search bar covering it
-                  top: 80,
-
-                  // the height of the bottom nav bar in app.dart
-                  bottom: 100
-                ),
-                itemBuilder: (context, i) {
-                  final gameID = gameModels[i].id!;
-                  final gameInfoAsync = ref.watch(
-                    gameGeneralInfoFutureProvider(gameID)
-                  );
-
-                  return gameInfoAsync.when(
-                    data: (gameInfo) {
-                      final gameModel = gameInfo.gameModel;
-                      return GameGeneralInfoCard(
-                        onTap: () async {
-                          // setState() error will appear but this is normal
-                          await pushNewScreen(
-                            context,
-                            screen: GameInfo(gameID: gameID,),
-                            withNavBar: false
-                          );
-                        },
-                        gameIconProvider: gameInfo.gameIconProvider,
-                        name: gameModel.name,
-                        publisher: gameModel.publisher,
-                        amountOfReviews: gameInfo.amountOfReviews,
-                        averageGameplayStars: gameInfo.averageGameplayStars,
-                        averagePlayabilityStars: gameInfo.averagePlayabilityStars,
-                        averageVisualsStars: gameInfo.averageVisualsStars,
-                        categories: gameModel.categories,
-                      );
-                    },
-                    // TODO Add error and loading widgets
-                    error: (_, __) => const CircularProgressIndicator(),
-                    loading: () => const CircularProgressIndicator(),
-                  );
-                },
-                separatorBuilder: (context, i) {
-                  return const SizedBox(height: 10,);
-                },
-              ),
-          );
-        },
-
-        error: (_, __) {
-          return wrapWithRefresher(
-            ref: ref,
-            query: query,
-            child: wrapWithScrollBehavior(
-              context: context,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(
-                    Icons.broken_image,
-                    size: 100,
-                    color: Colors.white,
+                      SizedBox(
+                        height: 5,
+                      ),
+                      Text(
+                        "No results. Please try different keywords",
+                        style: TextStyle(color: Colors.white, fontSize: 20),
+                        textAlign: TextAlign.center,
+                      )
+                    ],
                   ),
-                  Text(
-                    "An error occurred. Try refreshing",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20
-                    ),
-                    textAlign: TextAlign.center,
-                  )
-                ],
-              ),
-            ),
-          );
-        },
+                )
+              : ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: gameModels.length,
+                  padding: const EdgeInsets.only(
+                      // used to avoid the search bar covering it
+                      top: 80,
 
-        loading: () {
-          return const Center(
-            child: SizedBox(
-              width: 250,
-              height: 250,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 10,
-              ),
+                      // the height of the bottom nav bar in app.dart
+                      bottom: 100),
+                  itemBuilder: (context, i) {
+                    final gameID = gameModels[i].id!;
+                    final gameInfoAsync =
+                        ref.watch(gameGeneralInfoFutureProvider(gameID));
+
+                    return gameInfoAsync.when(
+                      data: (gameInfo) {
+                        final gameModel = gameInfo.gameModel;
+                        return GameGeneralInfoCard(
+                          onTap: () async {
+                            // setState() error will appear but this is normal
+                            await pushNewScreen(context,
+                                screen: GameInfo(
+                                  gameID: gameID,
+                                ),
+                                withNavBar: false);
+                          },
+                          gameIconProvider: gameInfo.gameIconProvider,
+                          name: gameModel.name,
+                          publisher: gameModel.publisher,
+                          amountOfReviews: gameInfo.amountOfReviews,
+                          averageGameplayStars: gameInfo.averageGameplayStars,
+                          averagePlayabilityStars:
+                              gameInfo.averagePlayabilityStars,
+                          averageVisualsStars: gameInfo.averageVisualsStars,
+                          categories: gameModel.categories,
+                        );
+                      },
+                      // TODO Add error and loading widgets
+                      error: (_, __) => const CircularProgressIndicator(),
+                      loading: () => const CircularProgressIndicator(),
+                    );
+                  },
+                  separatorBuilder: (context, i) {
+                    return const SizedBox(
+                      height: 10,
+                    );
+                  },
+                ),
+        );
+      }, error: (_, __) {
+        return wrapWithRefresher(
+          ref: ref,
+          query: query,
+          child: wrapWithScrollBehavior(
+            context: context,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(
+                  Icons.broken_image,
+                  size: 100,
+                  color: Colors.white,
+                ),
+                Text(
+                  "An error occurred. Try refreshing",
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                  textAlign: TextAlign.center,
+                )
+              ],
             ),
-          );
-        }
-      );
+          ),
+        );
+      }, loading: () {
+        return const Center(
+          child: SizedBox(
+            width: 250,
+            height: 250,
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 10,
+            ),
+          ),
+        );
+      });
     }
   }
 }
 
-class _AddGameButton extends StatelessWidget {
+enum _AddingGameDialogScreen {
+  Start,
+  Loading,
+  Error,
+  Result
+}
+
+/// Button that allows the user to add a game for anyone to review.
+/// Currently only supports Google Play Store games.
+class _AddGameButton extends StatefulWidget {
   static const fontSizeDesc = 16.0;
   static const accentColor = Colors.white;
 
   const _AddGameButton({
     Key? key,
   }) : super(key: key);
+
+  @override
+  State<_AddGameButton> createState() => _AddGameButtonState();
+}
+
+class _AddGameButtonState extends State<_AddGameButton> {
+  bool _loading = false;
+  String _googlePlayUrl = "";
 
   @override
   Widget build(BuildContext context) {
@@ -441,96 +439,103 @@ class _AddGameButton extends StatelessWidget {
       ),
       onPressed: () {
         showDialog(
-          context: context,
-          builder: (context) {
-            return KeyboardDismissible(
-              child: AlertDialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)
-                ),
-                backgroundColor: AppColors.darkGrey,
-                title: const Text(
-                  "Add a game",
-                  style: TextStyle(
-                    color: accentColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20
-                  ),
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: "Please enter a Google Play game link! ",
-                            style: TextStyle(
-                              color: accentColor,
-                              fontSize: fontSizeDesc,
-                            )
-                          ),
-                          TextSpan(
-                            text: "More options will be coming soon.",
-                            style: TextStyle(
-                                color: accentColor,
-                                fontSize: fontSizeDesc,
-                                fontStyle: FontStyle.italic
-                            )
-                          ),
-                        ]
-                      )
-                    ),
-
-                    const SizedBox(height: 5,),
-
-                    Form(
-                      child: Row(
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(top: 20),
-                            child: const FaIcon(
-                              FontAwesomeIcons.googlePlay,
-                              size: 20,
-                              color: accentColor,
-                            ),
-                          ),
-                          const SizedBox(width: 10,),
-                          Expanded(
-                            child: TextFormField(
-                              style: const TextStyle(
-                                color: accentColor
-                              ),
-                              decoration: const InputDecoration(
-                                enabledBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: accentColor
-                                  )
-                                )
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    )
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    child: const Text(
-                      "Submit",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16
+            context: context,
+            builder: (context) {
+              return KeyboardDismissible(
+                child: StatefulBuilder(
+                  builder: (context, setState) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                      backgroundColor: AppColors.darkGrey,
+                      title: const Text(
+                        "Add a game",
+                        style: TextStyle(
+                            color: _AddGameButton.accentColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20),
                       ),
-                    ),
-                    onPressed: (){},
-                  ),
-                ],
-              ),
-            );
-          }
-        );
+                      content: _loading
+                          ? const LinearProgressIndicator(
+                            color: _AddGameButton.accentColor,
+                          )
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text.rich(TextSpan(children: [
+                                  TextSpan(
+                                      text:
+                                          "Please enter a Google Play game link! ",
+                                      style: TextStyle(
+                                        color: _AddGameButton.accentColor,
+                                        fontSize: _AddGameButton.fontSizeDesc,
+                                      )),
+                                  TextSpan(
+                                      text: "More options will be coming soon.",
+                                      style: TextStyle(
+                                          color: _AddGameButton.accentColor,
+                                          fontSize: _AddGameButton.fontSizeDesc,
+                                          fontStyle: FontStyle.italic)),
+                                ])),
+                                const SizedBox(
+                                  height: 5,
+                                ),
+                                Form(
+                                    child: Row(
+                                  children: [
+                                    Container(
+                                      margin: const EdgeInsets.only(top: 20),
+                                      child: const FaIcon(
+                                        FontAwesomeIcons.googlePlay,
+                                        size: 20,
+                                        color: _AddGameButton.accentColor,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Expanded(
+                                      child: TextFormField(
+                                        style: const TextStyle(
+                                            color: _AddGameButton.accentColor),
+                                        decoration: const InputDecoration(
+                                            enabledBorder: UnderlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: _AddGameButton
+                                                        .accentColor))),
+                                        onChanged: (x) => _googlePlayUrl = x,
+                                      ),
+                                    ),
+                                  ],
+                                ))
+                              ],
+                            ),
+                      actions: [
+                        TextButton(
+                          child: const Text(
+                            "Submit",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          onPressed: _loading ? null : () async {
+                            setState(() => _loading = true);
+                            const googlePlayScraper = GooglePlayScraper();
+                            final res = await googlePlayScraper.appFromUrl(
+                                url: _googlePlayUrl);
+                            res.forEach((key, value) {
+                              debugPrint("$key: $value\n");
+                            });
+
+                            await Future.delayed(Duration(seconds: 5));
+                            setState(() => _loading = false);
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              );
+            });
       },
     );
   }

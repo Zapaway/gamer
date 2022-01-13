@@ -8,7 +8,9 @@ import 'package:html/parser.dart' as parser;
 /// Goes onto the Google Play website and scrapes the information from it.
 class GooglePlayScraper extends Scraper {
   static const String domain = "https://play.google.com";
-  final WebScraper scraper = WebScraper(domain);
+  static final WebScraper scraper = WebScraper(domain);
+
+  const GooglePlayScraper();
 
   /// Parses through HTML to get
   /// details about an app from the Google Play Store using an URL.
@@ -47,12 +49,15 @@ class GooglePlayScraper extends Scraper {
         final pageContent = scraper.getPageContent();
         final doc = parser.parse(pageContent);
 
-        final title = scraper.getElement("title", []).first["title"];
+        final title = (scraper
+          .getElement("title", [])
+          .first["title"] as String).replaceFirst(" - Apps on Google Play", "");
         final description = doc.getElementsByClassName("DWPxHb")[0]
-            .children[0]
-            .children[0]
-            .innerHtml
-            .replaceAll("<br>", "\n");
+          .children[0]
+          .children[0]
+          .innerHtml
+          .replaceAll("<br>", "\n")
+          .split("\n")[0].trim();  // get only the first paragraph
         final additionalInfo =
         scraper.getElement("div.IQ1z0d > span.htlgb", []);
         final String updated = additionalInfo[0]["title"];
@@ -60,8 +65,8 @@ class GooglePlayScraper extends Scraper {
         final String installs = additionalInfo[2]["title"];
         final String version = additionalInfo[3]["title"];
         final String androidVersion = additionalInfo[4]["title"];
-        final String contentRating =
-        (additionalInfo[5]["title"]).split("Learn More")[0];
+        final String contentRating = scraper
+          .getElement("div.KmO8jd", ["text"])[0]["title"];
         final String developer =
         (additionalInfo[additionalInfo.length - 2]["title"]);
         final devElement = scraper.getElement(
@@ -127,6 +132,9 @@ class GooglePlayScraper extends Scraper {
                 .split("category/")[1];
           }
         }
+        if (genreID.isEmpty || !genreID.startsWith("GAME_")) {
+          throw InvalidGooglePlayGameURL();
+        }
 
         final iconElement = scraper.getElement(
             "div.oQ6oV > div.hkhL9e > div.xSyT2c > img", ["src", "alt"]);
@@ -170,7 +178,7 @@ class GooglePlayScraper extends Scraper {
           },
         );
       } catch (e) {
-        throw Error();
+        rethrow;
       }
     } else {
       throw CannotAccessException();
@@ -180,8 +188,8 @@ class GooglePlayScraper extends Scraper {
   }
 }
 
-/// The URL given is not a valid Google Play Store link.
-class InvalidGooglePlayURL implements Exception {}
+/// The URL given is not a valid Google Play Store game link.
+class InvalidGooglePlayGameURL implements Exception {}
 
 /// Cannot access the Internet or not available
 /// in the given geographical location.
