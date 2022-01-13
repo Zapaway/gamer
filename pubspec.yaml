@@ -18,6 +18,7 @@ dependencies:
   sliding_up_panel: ^2.0.0+1
   flutter_svg: ^1.0.1
   material_floating_search_bar: ^0.3.6
+  font_awesome_flutter: ^9.2.0
 
   # Firebase
   firebase_core: ^1.11.0

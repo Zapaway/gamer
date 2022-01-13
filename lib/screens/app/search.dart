@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gamer/components/game_general_info_card.dart';
 import 'package:gamer/components/wrappers/keyboard_dismissible.dart';
 import 'package:gamer/models/game_model.dart';
@@ -283,9 +284,10 @@ class _SearchResults extends ConsumerWidget {
             "Search for a game",
             style: TextStyle(
               color: Colors.white,
-              fontSize: 20
+              fontSize: 25
             ),
-          )
+          ),
+          _AddGameButton(),
         ],
       );
     }
@@ -414,5 +416,117 @@ class _SearchResults extends ConsumerWidget {
         }
       );
     }
+  }
+}
+
+class _AddGameButton extends StatelessWidget {
+  static const fontSizeDesc = 16.0;
+  static const accentColor = Colors.white;
+
+  const _AddGameButton({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      icon: const Icon(
+        Icons.add,
+      ),
+      label: const Text(
+        "Or add a game",
+        style: TextStyle(
+          fontSize: 20,
+        ),
+      ),
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return KeyboardDismissible(
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)
+                ),
+                backgroundColor: AppColors.darkGrey,
+                title: const Text(
+                  "Add a game",
+                  style: TextStyle(
+                    color: accentColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20
+                  ),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: "Please enter a Google Play game link! ",
+                            style: TextStyle(
+                              color: accentColor,
+                              fontSize: fontSizeDesc,
+                            )
+                          ),
+                          TextSpan(
+                            text: "More options will be coming soon.",
+                            style: TextStyle(
+                                color: accentColor,
+                                fontSize: fontSizeDesc,
+                                fontStyle: FontStyle.italic
+                            )
+                          ),
+                        ]
+                      )
+                    ),
+
+                    const SizedBox(height: 5,),
+
+                    Form(
+                      child: Row(
+                        children: [
+                          FaIcon(
+                            FontAwesomeIcons.googlePlay,
+                            size: 20,
+                          ),
+                          Expanded(
+                            child: TextFormField(
+                              style: const TextStyle(
+                                color: accentColor
+                              ),
+                              decoration: const InputDecoration(
+                                enabledBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: accentColor
+                                  )
+                                )
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    )
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    child: const Text(
+                      "Submit",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16
+                      ),
+                    ),
+                    onPressed: (){},
+                  ),
+                ],
+              ),
+            );
+          }
+        );
+      },
+    );
   }
 }
