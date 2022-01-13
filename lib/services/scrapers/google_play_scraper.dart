@@ -5,12 +5,13 @@ import 'package:gamer/services/scrapers/scraper.dart';
 import 'package:web_scraper/web_scraper.dart';
 import 'package:html/parser.dart' as parser;
 
-
+/// Goes onto the Google Play website and scrapes the information from it.
 class GooglePlayScraper extends Scraper {
   static const String domain = "https://play.google.com";
   final WebScraper scraper = WebScraper(domain);
 
-  /// Get details about an app from the Google Play Store using an URL.
+  /// Parses through HTML to get
+  /// details about an app from the Google Play Store using an URL.
   @override
   Future<Map<String, dynamic>> appFromUrl(
       {required String url}) async {
@@ -178,6 +179,9 @@ class GooglePlayScraper extends Scraper {
     return result;
   }
 }
+
+/// The URL given is not a valid Google Play Store link.
+class InvalidGooglePlayURL implements Exception {}
 
 /// Cannot access the Internet or not available
 /// in the given geographical location.

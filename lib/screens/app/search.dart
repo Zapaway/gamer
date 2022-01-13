@@ -487,10 +487,15 @@ class _AddGameButton extends StatelessWidget {
                     Form(
                       child: Row(
                         children: [
-                          FaIcon(
-                            FontAwesomeIcons.googlePlay,
-                            size: 20,
+                          Container(
+                            margin: const EdgeInsets.only(top: 20),
+                            child: const FaIcon(
+                              FontAwesomeIcons.googlePlay,
+                              size: 20,
+                              color: accentColor,
+                            ),
                           ),
+                          const SizedBox(width: 10,),
                           Expanded(
                             child: TextFormField(
                               style: const TextStyle(
