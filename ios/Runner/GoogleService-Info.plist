@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>575108188354-pjb5an84l4ti67eva2mprt2i2epm4aqs.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.575108188354-pjb5an84l4ti67eva2mprt2i2epm4aqs</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>575108188354-7gp09nl5apnpacr5mlgoro4v79lis252.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBfegXmCmFNRHc_e4rwJcSOMzpXpBH4zGU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>575108188354</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.kenneth.gamer</string>
+	<key>PROJECT_ID</key>
+	<string>gamer-91395</string>
+	<key>STORAGE_BUCKET</key>
+	<string>gamer-91395.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:575108188354:ios:eca045b61ca8ae54ca535b</string>
+</dict>
+</plist>
