@@ -134,7 +134,7 @@ class GooglePlayScraper extends Scraper {
           }
         }
         if (genreID.isEmpty || !genreID.startsWith("GAME_")) {
-          throw InvalidGooglePlayGameURL();
+          throw InvalidGooglePlayGameURLException();
         }
 
         final iconElement = scraper.getElement(
@@ -190,7 +190,7 @@ class GooglePlayScraper extends Scraper {
 }
 
 /// The URL given is not a valid Google Play Store game link.
-class InvalidGooglePlayGameURL implements Exception {}
+class InvalidGooglePlayGameURLException implements Exception {}
 
 /// Cannot access the Internet or not available
 /// in the given geographical location.
