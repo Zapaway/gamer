@@ -1,0 +1,1 @@
+class GameAlreadyExistsException implements Exception {}

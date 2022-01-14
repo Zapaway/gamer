@@ -1,6 +1,7 @@
 /// Migrated from https://github.com/varamsky/google_play_store_scraper_dart
 /// to include null sound safety. Legal under the MIT license.
 
+import 'package:gamer/models/game_model.dart';
 import 'package:gamer/services/scrapers/scraper.dart';
 import 'package:web_scraper/web_scraper.dart';
 import 'package:html/parser.dart' as parser;

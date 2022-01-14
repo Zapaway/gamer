@@ -135,8 +135,27 @@ class DatabaseService {
     }
   }
 
-  static Future<void> setGameData(GameModel gameData) async {
-    await gamesCollection.doc(gameData.id).set(gameData.toJson());
+  /// If [gameIconUrl] is supplied, it will override [gameData.iconImagePath].
+  static Future<String> setGameData(GameModel gameData, {String? gameIconUrl}) async {
+    final doc = gamesCollection.doc(gameData.id);
+
+    if (gameIconUrl != null) {
+      final filePath =
+        await StorageService()
+          .uploadGameIconFromGoogleContentUrl(doc.id, gameIconUrl);
+
+      gameData = GameModel(
+        name: gameData.name,
+        nameLower: gameData.nameLower,
+        publisher: gameData.publisher,
+        desc: gameData.desc,
+        iconImagePath: filePath,
+        categories: gameData.categories
+      )..id = doc.id;
+    }
+
+    await doc.set(gameData.toJson());
+    return doc.id;
   }
 
   // setters and updaters (individual)
