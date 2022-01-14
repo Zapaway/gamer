@@ -423,6 +423,8 @@ class _AddGameButtonState extends State<_AddGameButton> {
       color: _AddGameButton.accentColor,
       fontWeight: FontWeight.bold,
       fontSize: 16);
+  final _formKey = GlobalKey<FormState>();
+
   _AddingGameDialogState _dialogState = _AddingGameDialogState.Start;
   String _googlePlayUrl = "";
 
@@ -478,33 +480,44 @@ class _AddGameButtonState extends State<_AddGameButton> {
                             height: 5,
                           ),
                           Form(
+                              key: _formKey,
                               child: Row(
-                            children: [
-                              Container(
-                                margin: const EdgeInsets.only(top: 20),
-                                child: const FaIcon(
-                                  FontAwesomeIcons.googlePlay,
-                                  size: 20,
-                                  color: _AddGameButton.accentColor,
-                                ),
-                              ),
-                              const SizedBox(
-                                width: 10,
-                              ),
-                              Expanded(
-                                child: TextFormField(
-                                  style: const TextStyle(
-                                      color: _AddGameButton.accentColor),
-                                  decoration: const InputDecoration(
-                                      enabledBorder: UnderlineInputBorder(
-                                          borderSide: BorderSide(
-                                              color:
-                                                  _AddGameButton.accentColor))),
-                                  onChanged: (x) => _googlePlayUrl = x,
-                                ),
-                              ),
-                            ],
-                          ))
+                                children: [
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 20),
+                                    child: const FaIcon(
+                                      FontAwesomeIcons.googlePlay,
+                                      size: 20,
+                                      color: _AddGameButton.accentColor,
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  Expanded(
+                                    child: TextFormField(
+                                      style: const TextStyle(
+                                          color: _AddGameButton.accentColor),
+                                      decoration: InputDecoration(
+                                          enabledBorder:
+                                              const UnderlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: _AddGameButton
+                                                          .accentColor)),
+                                          errorBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.red.shade200)),
+                                      errorStyle: _dialogActionTextStyle.copyWith(color: Colors.red.shade200, font)),
+                                      onChanged: (x) => _googlePlayUrl = x,
+                                      validator: (x) {
+                                        if (x?.isEmpty ?? true) {
+                                          return "You must provide a link";
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ))
                         ],
                       );
                       dialogActions = [
@@ -514,68 +527,79 @@ class _AddGameButtonState extends State<_AddGameButton> {
                             style: _dialogActionTextStyle,
                           ),
                           onPressed: () async {
+                            if (_formKey.currentState == null ||
+                                !_formKey.currentState!.validate()) {
+                              return;
+                            }
+
                             setState(() =>
                                 _dialogState = _AddingGameDialogState.Loading);
-
-                            const googlePlayScraper = GooglePlayScraper();
-                            try {
-                              // attempt to get the data
-                              final gameData = await googlePlayScraper
-                                  .appFromUrl(url: _googlePlayUrl);
-                              _gameNameResult = gameData["title"];
-
-                              // check if it isn't already a duplicate
-                              final queryRes = await DatabaseService
-                                  .gamesCollection
-                                  .where("name", isEqualTo: _gameNameResult)
-                                  .get();
-                              // if (queryRes.docs.isNotEmpty) {
-                                throw GameAlreadyExistsException();
-                              // }
-
-                              _gameIconUrl = gameData["icon"];
-
-                              // upload to db
-                              _gameIDResult = await DatabaseService.setGameData(
-                                  GameModel(
-                                      name: _gameNameResult,
-                                      nameLower: _gameNameResult
-                                          .split(" ")
-                                          .join()
-                                          .replaceFirst(
-                                              RegExp("[^a-zA-Z0-9]"), "")
-                                          .toLowerCase(),
-                                      publisher: gameData["developer"],
-                                      desc: gameData["description"],
-                                      iconImagePath: "",
-                                      categories: GameCategoriesModel(
-                                        genre: gameData["genre"],
-                                        ageRating: gameData["contentRating"],
-                                      ))
-                                    ..id = null,
-                                  gameIconUrl: _gameIconUrl
-                              );
-
-                              setState(() => _dialogState =
-                                  _AddingGameDialogState.Success);
-                            } on InvalidGooglePlayGameURLException catch (_) {
-                              _errorMsg = "You submitted a wrong link.";
-                            } on CannotAccessException catch (_) {
-                              _errorMsg =
-                                  "This link could not be processed. Try a different one.";
-                            } on GameAlreadyExistsException catch (_) {
-                              _errorMsg = "The game already exists.";
-                            }
-                            catch (e) {
-                              print(e);
-                              _errorMsg =
-                                  "An error occurred. Please try again later.";
-                            } finally {
-                              if (_errorMsg.isNotEmpty) {
-                                setState(() => _dialogState =
-                                    _AddingGameDialogState.Error);
-                              }
-                            }
+                            //
+                            // const googlePlayScraper = GooglePlayScraper();
+                            // try {
+                            //   // attempt to get the data
+                            //   final gameData = await googlePlayScraper
+                            //       .appFromUrl(url: _googlePlayUrl);
+                            //   _gameNameResult = gameData["title"];
+                            //
+                            //   // check if it isn't already a duplicate
+                            //   final queryRes = await DatabaseService
+                            //       .gamesCollection
+                            //       .where("name", isEqualTo: _gameNameResult)
+                            //       .get();
+                            //   if (queryRes.docs.isNotEmpty) {
+                            //     throw GameAlreadyExistsException();
+                            //   }
+                            //
+                            //   _gameIconUrl = gameData["icon"];
+                            //
+                            //   // upload to db
+                            //   _gameIDResult = await DatabaseService.setGameData(
+                            //       GameModel(
+                            //           name: _gameNameResult,
+                            //           nameLower: _gameNameResult
+                            //               .split(" ")
+                            //               .join()
+                            //               .replaceFirst(
+                            //                   RegExp("[^a-zA-Z0-9]"), "")
+                            //               .toLowerCase(),
+                            //           publisher: gameData["developer"],
+                            //           desc: gameData["description"],
+                            //           iconImagePath: "",
+                            //           categories: GameCategoriesModel(
+                            //             genre: gameData["genre"],
+                            //             ageRating: gameData["contentRating"],
+                            //           ))
+                            //         ..id = null,
+                            //       gameIconUrl: _gameIconUrl
+                            //   );
+                            //
+                            //   setState(() => _dialogState =
+                            //       _AddingGameDialogState.Success);
+                            //
+                            //   // display the right error
+                            // } on InvalidGooglePlayGameURLException catch (_) {
+                            //   _errorMsg = "You submitted a wrong link. Ensure that"
+                            //       " the link is from the Google Play Store and "
+                            //       "that the app is a game.";
+                            // } on CannotAccessException catch (_) {
+                            //   _errorMsg =
+                            //       "This link could not be processed. Try a different one.";
+                            // } on GameAlreadyExistsException catch (_) {
+                            //   _errorMsg = "The game already exists.";
+                            // } on ArgumentError catch (_) {
+                            //   _errorMsg = "Provide a Google Play Store game link.";
+                            // }
+                            // catch (e) {
+                            //   print(e);
+                            //   _errorMsg =
+                            //       "An error occurred. Please try again later.";
+                            // } finally {
+                            //   if (_errorMsg.isNotEmpty) {
+                            //     setState(() => _dialogState =
+                            //       _AddingGameDialogState.Error);
+                            //   }
+                            // }
                           },
                         ),
                       ];
@@ -589,14 +613,19 @@ class _AddGameButtonState extends State<_AddGameButton> {
                       break;
 
                     case _AddingGameDialogState.Error:
-                      dialogScreen = Center(
-                        child: Text(
-                          _errorMsg,
-                          style: const TextStyle(
-                            color: _AddGameButton.accentColor,
-                            fontSize: _AddGameButton.fontSizeDesc,
+                      dialogScreen = Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Center(
+                            child: Text(
+                              _errorMsg,
+                              style: const TextStyle(
+                                color: _AddGameButton.accentColor,
+                                fontSize: _AddGameButton.fontSizeDesc,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       );
                       dialogActions = [
                         TextButton(
@@ -619,27 +648,25 @@ class _AddGameButtonState extends State<_AddGameButton> {
                           Image(
                             image: NetworkImage(_gameIconUrl),
                           ),
-                          const SizedBox(height: 10,),
-                          Text.rich(TextSpan(
-                            children: [
-                              TextSpan(
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Text.rich(TextSpan(children: [
+                            TextSpan(
                                 text: _gameNameResult,
                                 style: const TextStyle(
                                   color: _AddGameButton.accentColor,
                                   fontSize: _AddGameButton.fontSizeDesc,
                                   fontWeight: FontWeight.bold,
-                                )
-                              ),
-                              const TextSpan(
+                                )),
+                            const TextSpan(
                                 text: " has been added! Thank you for your "
                                     "contribution.",
                                 style: TextStyle(
                                   color: _AddGameButton.accentColor,
                                   fontSize: _AddGameButton.fontSizeDesc,
-                                )
-                              ),
-                            ]
-                          ))
+                                )),
+                          ]))
                         ],
                       );
                       dialogActions = [
@@ -648,18 +675,14 @@ class _AddGameButtonState extends State<_AddGameButton> {
                             "View",
                             style: _dialogActionTextStyle,
                           ),
-                          onPressed: () async {
-
-                          },
+                          onPressed: () async {},
                         ),
                         TextButton(
                           child: const Text(
                             "Ok",
                             style: _dialogActionTextStyle,
                           ),
-                          onPressed: () async {
-
-                          },
+                          onPressed: () async {},
                         ),
                       ];
                       break;
