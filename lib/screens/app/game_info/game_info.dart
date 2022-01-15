@@ -15,8 +15,6 @@ import 'package:gamer/screens/loading.dart';
 import 'package:gamer/shared/consts.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
-// TODO fix scrolling issue
-
 class GameInfo extends ConsumerStatefulWidget {
   /// Used for caching expensive game data that needs to be retrieved
   /// quickly on first build.

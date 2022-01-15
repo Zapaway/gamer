@@ -13,7 +13,6 @@ import 'package:gamer/services/scrapers/google_play_scraper.dart';
 import 'package:gamer/shared/consts.dart';
 import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
-import 'package:web_scraper/web_scraper.dart';
 
 import 'game_info/game_info.dart';
 
@@ -428,8 +427,10 @@ class _AddGameButtonState extends State<_AddGameButton> {
   _AddingGameDialogState _dialogState = _AddingGameDialogState.Start;
   String _googlePlayUrl = "";
 
-  // for the succeed state
+  // for both states
   String _gameNameResult = "";
+
+  // for the succeed state
   String _gameIconUrl = "";
   String _gameIDResult = "";
 
@@ -449,8 +450,14 @@ class _AddGameButtonState extends State<_AddGameButton> {
         ),
       ),
       onPressed: () {
+        // always show start when starting (ensures to reset state)
+        _dialogState = _AddingGameDialogState.Start;
+        _errorMsg = "";
+        _gameNameResult = "";
+
         showDialog(
             context: context,
+            barrierDismissible: false,
             builder: (context) {
               return KeyboardDismissible(
                 child: StatefulBuilder(builder: (context, setState) {
@@ -507,7 +514,10 @@ class _AddGameButtonState extends State<_AddGameButton> {
                                           errorBorder: UnderlineInputBorder(
                                               borderSide: BorderSide(
                                                   color: Colors.red.shade200)),
-                                      errorStyle: _dialogActionTextStyle.copyWith(color: Colors.red.shade200, font)),
+                                          errorStyle: TextStyle(
+                                            color: Colors.red[200],
+                                            fontSize: 14,
+                                          )),
                                       onChanged: (x) => _googlePlayUrl = x,
                                       validator: (x) {
                                         if (x?.isEmpty ?? true) {
@@ -523,6 +533,13 @@ class _AddGameButtonState extends State<_AddGameButton> {
                       dialogActions = [
                         TextButton(
                           child: const Text(
+                            "Cancel",
+                            style: _dialogActionTextStyle,
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        TextButton(
+                          child: const Text(
                             "Submit",
                             style: _dialogActionTextStyle,
                           ),
@@ -534,72 +551,73 @@ class _AddGameButtonState extends State<_AddGameButton> {
 
                             setState(() =>
                                 _dialogState = _AddingGameDialogState.Loading);
-                            //
-                            // const googlePlayScraper = GooglePlayScraper();
-                            // try {
-                            //   // attempt to get the data
-                            //   final gameData = await googlePlayScraper
-                            //       .appFromUrl(url: _googlePlayUrl);
-                            //   _gameNameResult = gameData["title"];
-                            //
-                            //   // check if it isn't already a duplicate
-                            //   final queryRes = await DatabaseService
-                            //       .gamesCollection
-                            //       .where("name", isEqualTo: _gameNameResult)
-                            //       .get();
-                            //   if (queryRes.docs.isNotEmpty) {
-                            //     throw GameAlreadyExistsException();
-                            //   }
-                            //
-                            //   _gameIconUrl = gameData["icon"];
-                            //
-                            //   // upload to db
-                            //   _gameIDResult = await DatabaseService.setGameData(
-                            //       GameModel(
-                            //           name: _gameNameResult,
-                            //           nameLower: _gameNameResult
-                            //               .split(" ")
-                            //               .join()
-                            //               .replaceFirst(
-                            //                   RegExp("[^a-zA-Z0-9]"), "")
-                            //               .toLowerCase(),
-                            //           publisher: gameData["developer"],
-                            //           desc: gameData["description"],
-                            //           iconImagePath: "",
-                            //           categories: GameCategoriesModel(
-                            //             genre: gameData["genre"],
-                            //             ageRating: gameData["contentRating"],
-                            //           ))
-                            //         ..id = null,
-                            //       gameIconUrl: _gameIconUrl
-                            //   );
-                            //
-                            //   setState(() => _dialogState =
-                            //       _AddingGameDialogState.Success);
-                            //
-                            //   // display the right error
-                            // } on InvalidGooglePlayGameURLException catch (_) {
-                            //   _errorMsg = "You submitted a wrong link. Ensure that"
-                            //       " the link is from the Google Play Store and "
-                            //       "that the app is a game.";
-                            // } on CannotAccessException catch (_) {
-                            //   _errorMsg =
-                            //       "This link could not be processed. Try a different one.";
-                            // } on GameAlreadyExistsException catch (_) {
-                            //   _errorMsg = "The game already exists.";
-                            // } on ArgumentError catch (_) {
-                            //   _errorMsg = "Provide a Google Play Store game link.";
-                            // }
-                            // catch (e) {
-                            //   print(e);
-                            //   _errorMsg =
-                            //       "An error occurred. Please try again later.";
-                            // } finally {
-                            //   if (_errorMsg.isNotEmpty) {
-                            //     setState(() => _dialogState =
-                            //       _AddingGameDialogState.Error);
-                            //   }
-                            // }
+
+                            const googlePlayScraper = GooglePlayScraper();
+                            try {
+                              // attempt to get the data
+                              final gameData = await googlePlayScraper
+                                  .appFromUrl(url: _googlePlayUrl.trim());
+                              _gameNameResult = gameData["title"];
+
+                              // check if it isn't already a duplicate
+                              final queryRes = await DatabaseService
+                                  .gamesCollection
+                                  .where("name", isEqualTo: _gameNameResult)
+                                  .get();
+                              if (queryRes.docs.isNotEmpty) {
+                                for (final d in queryRes.docs) {
+                                  print(d.get("name"));
+                                }
+                                throw GameAlreadyExistsException();
+                              }
+
+                              _gameIconUrl = gameData["icon"];
+
+                              // upload to db
+                              _gameIDResult = await DatabaseService.setGameData(
+                                  GameModel(
+                                      name: _gameNameResult,
+                                      nameLower: _gameNameResult
+                                          .split(" ")
+                                          .join()
+                                          .replaceFirst(
+                                              RegExp("[^a-zA-Z0-9]"), "")
+                                          .toLowerCase(),
+                                      publisher: gameData["developer"],
+                                      desc: gameData["description"],
+                                      iconImagePath: "",
+                                      categories: GameCategoriesModel(
+                                        genre: gameData["genre"],
+                                        ageRating: gameData["contentRating"],
+                                      ))
+                                    ..id = null,
+                                  gameIconUrl: _gameIconUrl
+                              );
+
+                              setState(() => _dialogState =
+                                  _AddingGameDialogState.Success);
+
+                              // display the right error msg if it occurs
+                            } on InvalidGooglePlayGameURLException catch (_) {
+                              _errorMsg = "You submitted an invalid link. Ensure that"
+                                  " the link is from the Google Play Store and "
+                                  "that the app is a game.";
+                            } on CannotAccessException catch (_) {
+                              _errorMsg =
+                                  "This link could not be processed. Try a different one.";
+                            } on GameAlreadyExistsException catch (_) {
+                              _errorMsg = "The game, $_gameNameResult, already exists.";
+                            }
+                            catch (e) {
+                              print(e);
+                              _errorMsg =
+                                  "An error occurred. Please try again later.";
+                            } finally {
+                              if (_errorMsg.isNotEmpty) {
+                                setState(() => _dialogState =
+                                  _AddingGameDialogState.Error);
+                              }
+                            }
                           },
                         ),
                       ];
@@ -607,7 +625,8 @@ class _AddGameButtonState extends State<_AddGameButton> {
 
                     case _AddingGameDialogState.Loading:
                       dialogScreen = const LinearProgressIndicator(
-                        color: _AddGameButton.accentColor,
+                        color: AppColors.lightTurquoise,
+                        backgroundColor: AppColors.darkTurquoise,
                       );
                       dialogActions = [];
                       break;
@@ -675,14 +694,21 @@ class _AddGameButtonState extends State<_AddGameButton> {
                             "View",
                             style: _dialogActionTextStyle,
                           ),
-                          onPressed: () async {},
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            await pushNewScreen(
+                              context,
+                              withNavBar: false,
+                              screen: GameInfo(gameID: _gameIDResult,)
+                            );
+                          },
                         ),
                         TextButton(
                           child: const Text(
                             "Ok",
                             style: _dialogActionTextStyle,
                           ),
-                          onPressed: () async {},
+                          onPressed: () => Navigator.pop(context),
                         ),
                       ];
                       break;

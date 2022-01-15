@@ -1,7 +1,6 @@
 /// Migrated from https://github.com/varamsky/google_play_store_scraper_dart
 /// to include null sound safety. Legal under the MIT license.
 
-import 'package:gamer/models/game_model.dart';
 import 'package:gamer/services/scrapers/scraper.dart';
 import 'package:web_scraper/web_scraper.dart';
 import 'package:html/parser.dart' as parser;
@@ -26,7 +25,7 @@ class GooglePlayScraper extends Scraper {
     if (appID != null) {
       res = await app(appID: appID, gl: gl);
     } else {
-      throw ArgumentError();
+      throw InvalidGooglePlayGameURLException();
     }
 
     return res;
@@ -57,8 +56,13 @@ class GooglePlayScraper extends Scraper {
           .children[0]
           .children[0]
           .innerHtml
+
+        // split at any extra new line separating paragraphs and use the first paragraph
+          .split(RegExp(r"<br>\s*<br>"))[0].trim()
+
           .replaceAll("<br>", "\n")
-          .split("\n")[0].trim();  // get only the first paragraph
+          .replaceAll(RegExp(r"</*.*?>"), "");  // get rid of any remaining tags
+
         final additionalInfo =
         scraper.getElement("div.IQ1z0d > span.htlgb", []);
         final String updated = additionalInfo[0]["title"];
