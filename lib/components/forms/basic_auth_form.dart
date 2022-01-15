@@ -160,43 +160,43 @@ class _AppBasicAuthFormState extends State<AppBasicAuthForm> {
                         },
                       ),
 
-                      Container(
-                        margin: const EdgeInsets.symmetric(vertical: 15),
-                        child: const Center(
-                          child: Text(
-                            "OR",
-                            style: TextStyle(
-                              fontSize: 45,
-                            ),
-                          ),
-                        ),
-                      ),
+                      // Container(
+                      //   margin: const EdgeInsets.symmetric(vertical: 15),
+                      //   child: const Center(
+                      //     child: Text(
+                      //       "OR",
+                      //       style: TextStyle(
+                      //         fontSize: 45,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
 
-                      /// GUI for signing up with Google
-                      AppSubmitFormButton(
-                        text: widget.googleValidatorButtonText,
-                        color: AppColors.darkBlue,
-                        icon: const FaIcon(
-                          FontAwesomeIcons.google,
-                          color: Colors.white,
-                        ),
-                        onPressed: () async {
-                          try {
-                            final user = await AuthService().authUsingGoogle();
-                            if (user == null) return;
-
-                            Navigator.pop(context, true);
-                          } on SignInWithCredentialException catch (e) {
-                            showDialog(
-                                context: context,
-                                builder: (_) {
-                                  return FormErrorDialog(
-                                      title: "Sign In With Google Error",
-                                      errorMessage: e.message);
-                                });
-                          }
-                        },
-                      ),
+                      // /// GUI for signing up with Google
+                      // AppSubmitFormButton(
+                      //   text: widget.googleValidatorButtonText,
+                      //   color: AppColors.darkBlue,
+                      //   icon: const FaIcon(
+                      //     FontAwesomeIcons.google,
+                      //     color: Colors.white,
+                      //   ),
+                      //   onPressed: () async {
+                      //     try {
+                      //       final user = await AuthService().authUsingGoogle();
+                      //       if (user == null) return;
+                      //
+                      //       Navigator.pop(context, true);
+                      //     } on SignInWithCredentialException catch (e) {
+                      //       showDialog(
+                      //           context: context,
+                      //           builder: (_) {
+                      //             return FormErrorDialog(
+                      //                 title: "Sign In With Google Error",
+                      //                 errorMessage: e.message);
+                      //           });
+                      //     }
+                      //   },
+                      // ),
 
                       const SizedBox(
                         height: 30,
