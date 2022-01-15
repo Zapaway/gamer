@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 /// App rating system that uses five stars.
-/// TODO Add error text.
 class FiveStarsFormField extends FormField<int> {
   final double? width;
   final Widget? label;

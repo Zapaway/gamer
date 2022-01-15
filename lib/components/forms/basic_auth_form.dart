@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gamer/components/forms/submit_form_button.dart';
 import 'package:gamer/components/wrappers/keyboard_dismissible.dart';
 import 'package:gamer/components/forms/text_form_field.dart';
@@ -24,8 +25,9 @@ class AppBasicAuthForm extends StatefulWidget {
   final GlobalKey<FormState> _formKey;
   final String? Function(String?) emailValidator;
   final String? Function(String?) pwdValidator;
-  final Future<void> Function()? asyncValidateBeforeSaving;  // any validation needed before saving
-  final VoidCallback submitWithEaPValidator;  // email and pwd validator
+  final Future<void> Function()?
+      asyncValidateBeforeSaving; // any validation needed before saving
+  final VoidCallback submitWithEaPValidator; // email and pwd validator
 
   final String header;
   final String desc;
@@ -47,9 +49,8 @@ class AppBasicAuthForm extends StatefulWidget {
     this.googleValidatorButtonText = "",
     this.passwordHelperTextEnabled = false,
     this.textFields,
-  })
-    : _formKey = formKey,
-      super(key: key);
+  })  : _formKey = formKey,
+        super(key: key);
 
   @override
   State<AppBasicAuthForm> createState() => _AppBasicAuthFormState();
@@ -77,7 +78,11 @@ class _AppBasicAuthFormState extends State<AppBasicAuthForm> {
 
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(left: 15, top: 11, right: 15,),
+                padding: const EdgeInsets.only(
+                  left: 15,
+                  top: 11,
+                  right: 15,
+                ),
                 // padding: const EdgeInsets.fromLTRB(15, 11, 15, 0),
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
@@ -87,18 +92,16 @@ class _AppBasicAuthFormState extends State<AppBasicAuthForm> {
                       /// title and subtitle
                       Text(
                         widget.header,
-                        style: const TextStyle(
-                            fontSize: 45
-                        ),
+                        style: const TextStyle(fontSize: 45),
                       ),
                       Text(
                         widget.desc,
-                        style: const TextStyle(
-                            fontSize: 22
-                        ),
+                        style: const TextStyle(fontSize: 22),
                       ),
 
-                      const SizedBox(height: 25,),
+                      const SizedBox(
+                        height: 25,
+                      ),
 
                       /// GUI for signing up with email w/ pwd
                       Form(
@@ -107,43 +110,45 @@ class _AppBasicAuthFormState extends State<AppBasicAuthForm> {
                           children: [
                             ...?widget.textFields,
                             if (widget.textFields != null)
-                              const SizedBox(height: 15,),
+                              const SizedBox(
+                                height: 15,
+                              ),
                             AppTextFormField(
                               hintText: "Email",
                               validator: widget.emailValidator,
                               useSpecialAutovalidationMode: true,
                               formatters: [
-                                FilteringTextInputFormatter.deny(RegExp(
-                                  r"\s"
-                                )),
+                                FilteringTextInputFormatter.deny(RegExp(r"\s")),
                               ],
                             ),
-                            const SizedBox(height: 15,),
+                            const SizedBox(
+                              height: 15,
+                            ),
                             AppTextFormField(
                               hintText: "Password",
                               validator: widget.pwdValidator,
                               useSpecialAutovalidationMode: true,
                               obscureText: true,
                               helperText: widget.passwordHelperTextEnabled
-                                ? "Must contain the following\n"
-                                  "• At least one special character\n"
-                                  "• At least one uppercase character\n"
-                                  "• At least one number\n"
-                                  "• Contain 6 characters or more"
-                                : null,
-                              counterLabel: widget.passwordHelperTextEnabled
-                                ? ""
-                                : null,
+                                  ? "Must contain the following\n"
+                                      "• At least one special character\n"
+                                      "• At least one uppercase character\n"
+                                      "• At least one number\n"
+                                      "• Contain 6 characters or more"
+                                  : null,
+                              counterLabel:
+                                  widget.passwordHelperTextEnabled ? "" : null,
                               formatters: [
                                 FilteringTextInputFormatter.allow(RegExp(
-                                  "[0-9a-zA-Z~`!@#\$%^&*()_\\-\\+=\\{\\[\\}\\]\\|\\:;\"'<,\\>\\.\\?/]"
-                                )),
+                                    "[0-9a-zA-Z~`!@#\$%^&*()_\\-\\+=\\{\\[\\}\\]\\|\\:;\"'<,\\>\\.\\?/]")),
                               ],
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 25,),
+                      const SizedBox(
+                        height: 25,
+                      ),
                       AppSubmitFormButton(
                         text: widget.eapValidatorButtonText,
                         onPressed: () {
@@ -171,29 +176,31 @@ class _AppBasicAuthFormState extends State<AppBasicAuthForm> {
                       AppSubmitFormButton(
                         text: widget.googleValidatorButtonText,
                         color: AppColors.darkBlue,
-                        icon: const ImageIcon(
-                          AssetImage("assets/google.png"),
+                        icon: const FaIcon(
+                          FontAwesomeIcons.google,
                           color: Colors.white,
                         ),
                         onPressed: () async {
                           try {
                             final user = await AuthService().authUsingGoogle();
-                            if (user == null) throw Error();
+                            if (user == null) return;
 
                             Navigator.pop(context, true);
-                          }
-                          on SignInWithCredentialException catch (e) {
-                            showDialog(context: context, builder: (_) {
-                              return FormErrorDialog(
-                                title: "Sign In With Google Error",
-                                errorMessage: e.message
-                              );
-                            });
+                          } on SignInWithCredentialException catch (e) {
+                            showDialog(
+                                context: context,
+                                builder: (_) {
+                                  return FormErrorDialog(
+                                      title: "Sign In With Google Error",
+                                      errorMessage: e.message);
+                                });
                           }
                         },
                       ),
 
-                      const SizedBox(height: 30,),
+                      const SizedBox(
+                        height: 30,
+                      ),
                     ],
                   ),
                 ),
@@ -205,4 +212,3 @@ class _AppBasicAuthFormState extends State<AppBasicAuthForm> {
     );
   }
 }
-

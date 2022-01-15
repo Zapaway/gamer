@@ -350,7 +350,6 @@ class _SearchResults extends ConsumerWidget {
                           categories: gameModel.categories,
                         );
                       },
-                      // TODO Add error and loading widgets
                       error: (_, __) => const CircularProgressIndicator(),
                       loading: () => const CircularProgressIndicator(),
                     );

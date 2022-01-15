@@ -16,7 +16,7 @@ class Wrapper extends ConsumerWidget {
 
     return userModel.maybeWhen(
       data: (x) => x == null ? const Auth() : const App(),
-      orElse: () => const Loading(),  // TODO create a splash screen
+      orElse: () => const Loading(),
     );
   }
 }

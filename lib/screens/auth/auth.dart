@@ -5,7 +5,6 @@ import 'package:gamer/screens/auth/sign_up.dart';
 import 'package:gamer/shared/consts.dart';
 
 import '../loading.dart';
-/// TODO Put loading screen somewhere else.
 
 /// Landing page for a user to sign up or login if they hadn't already
 /// done so.
@@ -43,7 +42,6 @@ class _AuthState extends State<Auth> {
       );
     }
 
-    // TODO fix Loading()
     return loading ? const Loading() : Scaffold(
       body: Container(
         decoration: AppColors.backgroundGradient,
