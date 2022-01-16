@@ -55,7 +55,7 @@ class _AuthState extends State<Auth> {
                 children: [
                   SvgPicture.asset("assets/title.svg",),
                   const Text(
-                    "The place for any gamer to review games and find good ones",
+                    "Find and review any game with ease",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
